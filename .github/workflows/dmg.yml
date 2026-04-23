@@ -67,13 +67,14 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Signing & notarization disabled: we publish an unsigned DMG to the
-          # GitHub Release. Users open it via right-click → Open the first
-          # time. To enable Apple signing later, populate these secrets and
-          # uncomment the block below.
+          # Ad-hoc sign: `-` tells codesign to sign with no identity, which
+          # avoids the "app is damaged" Gatekeeper message on unsigned
+          # downloads. Users still see an "unidentified developer" warning
+          # on first open (right-click → Open to bypass). For full Developer
+          # ID + notarization, populate the secrets below and uncomment.
+          APPLE_SIGNING_IDENTITY: "-"
           # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           # APPLE_ID: ${{ secrets.APPLE_ID }}
           # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
