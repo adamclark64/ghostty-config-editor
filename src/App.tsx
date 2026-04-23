@@ -137,10 +137,17 @@ export default function App() {
    * Apply a set of key→values overrides to the current on-disk config and
    * immediately save + reload. Used by the theme gallery so picking a theme
    * is a live, one-click preview.
+   *
+   * We replace the draft with the merged result before saving so the field
+   * editor immediately reflects the applied theme. Without this, `draft`
+   * holds the pre-theme values while disk (and `original` once refetched)
+   * advances — making the UI look unchanged *and* re-enabling Save, which
+   * would then write the stale draft back and revert the theme.
    */
   async function applyEntriesAndGo(entries: Array<[string, string[]]>) {
     const base = config.original.slice();
     const next = mergeValues(base, entries);
+    config.replace(next);
     await saveAndReload(next, true);
   }
 

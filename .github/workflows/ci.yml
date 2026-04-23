@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  commitlint:
+    name: Lint commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate PR commits
+        if: github.event_name == 'pull_request'
+        run: pnpm exec commitlint --from=${{ github.event.pull_request.base.sha }} --to=${{ github.event.pull_request.head.sha }} --verbose
+
+      # Skip on the very first commit to main (no parent exists).
+      # `github.event.before` is all-zeros on the initial push of a branch.
+      - name: Validate push commit
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: pnpm exec commitlint --from=${{ github.event.before }} --to=${{ github.event.after }} --verbose
+
+  changeset-check:
+    name: Require changeset on PRs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check for changeset
+        run: pnpm exec changeset status --since=origin/main
