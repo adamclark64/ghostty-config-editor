@@ -85,6 +85,13 @@ export function useConfig(schema: ConfigKey[] | undefined) {
 
   const reset = useCallback(() => setDraft(query.data ?? []), [query.data]);
 
+  /**
+   * Replace the entire draft in one shot. Used when the config is rewritten
+   * from outside the field editor (e.g. applying a theme preset) so the UI
+   * reflects what's now on disk instead of lingering on stale edits.
+   */
+  const replace = useCallback((entries: ConfigEntry[]) => setDraft(entries), []);
+
   const isDirty = useMemo(() => {
     if (draft === null) return false;
     return JSON.stringify(draft) !== JSON.stringify(original);
@@ -99,6 +106,7 @@ export function useConfig(schema: ConfigKey[] | undefined) {
     valuesByKey,
     setValues,
     reset,
+    replace,
     isDirty,
   };
 }
