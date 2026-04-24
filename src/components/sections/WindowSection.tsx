@@ -6,8 +6,27 @@ import {
   TextInput,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+
+const WINDOW_HANDLED = [
+  "background",
+  "background-blur",
+  "background-image",
+  "background-opacity",
+  "confirm-close-surface",
+  "foreground",
+  "macos-titlebar-style",
+  "quit-after-last-window-closed",
+  "window-decoration",
+  "window-height",
+  "window-padding-balance",
+  "window-padding-x",
+  "window-padding-y",
+  "window-theme",
+  "window-width",
+] as const;
 
 export function WindowSection() {
   const cfg = useConfigCtx();
@@ -244,24 +263,11 @@ export function WindowSection() {
         />
       </FieldRow>
 
-      <div className="px-6 py-4">
-        <details>
-          <summary
-            className="cursor-pointer text-[12px] font-semibold"
-            style={{ color: "var(--muted)" }}
-          >
-            More window settings (43 more)
-          </summary>
-          <div
-            className="mt-3 text-[11.5px]"
-            style={{ color: "var(--muted)" }}
-          >
-            Long-tail window keys are preserved on save but not yet surfaced
-            with dedicated UI. Edit them in the config file directly until a
-            later increment.
-          </div>
-        </details>
-      </div>
+      <MoreSettings
+        sectionId="window"
+        handled={WINDOW_HANDLED}
+        subtitle="Every remaining window-group schema key, editable with a generic widget inferred from its type."
+      />
     </>
   );
 }

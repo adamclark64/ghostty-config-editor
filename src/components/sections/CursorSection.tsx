@@ -6,6 +6,7 @@ import {
   TextInput,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 
 const CURSOR_STYLES = [
@@ -15,6 +16,15 @@ const CURSOR_STYLES = [
 ] as const;
 
 type CursorStyleValue = (typeof CURSOR_STYLES)[number]["value"];
+
+const CURSOR_HANDLED = [
+  "cursor-click-to-move",
+  "cursor-color",
+  "cursor-opacity",
+  "cursor-style",
+  "cursor-style-blink",
+  "cursor-thickness",
+] as const;
 
 export function CursorSection() {
   const cfg = useConfigCtx();
@@ -142,6 +152,7 @@ export function CursorSection() {
           onChange={(v) => cfg.set("cursor-click-to-move", String(v))}
         />
       </FieldRow>
+      <MoreSettings sectionId="cursor" handled={CURSOR_HANDLED} />
     </>
   );
 }

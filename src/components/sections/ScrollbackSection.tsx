@@ -1,6 +1,12 @@
 import { FieldRow, SecHeader } from "@/components/primitives/layout";
 import { Slider, Stepper } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
+
+const SCROLLBACK_HANDLED = [
+  "click-repeat-interval",
+  "scrollback-limit",
+] as const;
 
 export function ScrollbackSection() {
   const cfg = useConfigCtx();
@@ -42,6 +48,7 @@ export function ScrollbackSection() {
           {Math.round(clickInterval)}ms
         </span>
       </FieldRow>
+      <MoreSettings sectionId="scrollback" handled={SCROLLBACK_HANDLED} />
     </>
   );
 }

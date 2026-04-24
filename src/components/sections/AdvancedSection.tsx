@@ -8,7 +8,17 @@ import {
   TextInput,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
+
+const ADVANCED_HANDLED = [
+  "abnormal-command-exit-runtime",
+  "config-file",
+  "custom-shader",
+  "custom-shader-animation",
+  "language",
+  "wait-after-command",
+] as const;
 
 export function AdvancedSection() {
   const cfg = useConfigCtx();
@@ -181,6 +191,7 @@ function UnknownKeysPanel() {
           )}
         </div>
       </div>
+      <MoreSettings sectionId="advanced" handled={ADVANCED_HANDLED} />
     </>
   );
 }

@@ -5,7 +5,15 @@ import {
   TextInput,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
+
+const RENDERING_HANDLED = [
+  "bold-is-bright",
+  "minimum-contrast",
+  "unfocused-split-fill",
+  "unfocused-split-opacity",
+] as const;
 
 export function RenderingSection() {
   const cfg = useConfigCtx();
@@ -78,6 +86,7 @@ export function RenderingSection() {
           onChange={(v) => cfg.set("bold-is-bright", String(v))}
         />
       </FieldRow>
+      <MoreSettings sectionId="rendering" handled={RENDERING_HANDLED} />
     </>
   );
 }

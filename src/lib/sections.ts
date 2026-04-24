@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/Icon";
+import type { ConfigKey } from "@/types";
 
 export type SectionId =
   | "colors"
@@ -36,3 +37,51 @@ export const SECTIONS: readonly SectionMeta[] = [
   { id: "app", label: "App", icon: "app", count: 14 },
   { id: "advanced", label: "Advanced", icon: "gear", count: 33 },
 ];
+
+/**
+ * Ghostty's `group` metadata is human-readable prose; this map aligns the
+ * schema's groups to our sidebar section IDs.
+ */
+const GROUP_TO_SECTION: Record<string, SectionId> = {
+  colors: "colors",
+  color: "colors",
+  theme: "colors",
+  font: "font",
+  cursor: "cursor",
+  window: "window",
+  keybind: "keybinds",
+  keybinds: "keybinds",
+  mouse: "mouse",
+  rendering: "rendering",
+  render: "rendering",
+  scrollback: "scrollback",
+  shell: "shell",
+  clipboard: "clipboard",
+  app: "app",
+  advanced: "advanced",
+};
+
+export function sectionForKey(k: ConfigKey): SectionId {
+  const lower = k.group.toLowerCase();
+  for (const [needle, sec] of Object.entries(GROUP_TO_SECTION)) {
+    if (lower.includes(needle)) return sec;
+  }
+  // Prefix-based fallback for common ghostty conventions.
+  if (k.name.startsWith("font-")) return "font";
+  if (k.name.startsWith("cursor-")) return "cursor";
+  if (k.name.startsWith("window-")) return "window";
+  if (k.name.startsWith("macos-")) return "app";
+  if (k.name.startsWith("gtk-")) return "app";
+  if (k.name.startsWith("clipboard-")) return "clipboard";
+  if (k.name.startsWith("background-") || k.name.startsWith("palette")) return "colors";
+  if (k.name.startsWith("shell-")) return "shell";
+  if (k.name.startsWith("mouse-")) return "mouse";
+  return "advanced";
+}
+
+export function keysForSection(
+  schema: ConfigKey[],
+  id: SectionId
+): ConfigKey[] {
+  return schema.filter((k) => sectionForKey(k) === id);
+}
