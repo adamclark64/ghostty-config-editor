@@ -29,6 +29,7 @@ export const api = {
   restoreBackup: (path: string) => invoke<void>("restore_backup", { path }),
   reloadGhostty: () => invoke<void>("reload_ghostty"),
   listThemePreviews: () => invoke<ThemePreview[]>("list_theme_previews"),
+  listRemoteThemes: () => invoke<ThemePreview[]>("list_remote_themes"),
   sessionStatus: () => invoke<SessionStatus>("session_status"),
   revertSession: () => invoke<string>("revert_session"),
   keepSession: () => invoke<void>("keep_session"),

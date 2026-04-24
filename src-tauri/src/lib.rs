@@ -2,6 +2,7 @@ mod commands;
 mod config_io;
 mod config_parser;
 mod ghostty_cli;
+mod remote_themes;
 mod schema;
 mod session;
 mod themes;
@@ -34,6 +35,7 @@ pub fn run() {
             commands::restore_backup,
             commands::reload_ghostty,
             commands::list_theme_previews,
+            commands::list_remote_themes,
             commands::session_status,
             commands::revert_session,
             commands::keep_session,

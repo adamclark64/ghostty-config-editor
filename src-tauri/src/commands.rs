@@ -13,6 +13,7 @@ use crate::config_parser::{self, ConfigEntry};
 use crate::ghostty_cli;
 use crate::schema::{self, ConfigKey};
 use crate::session::{self, SessionStatus};
+use crate::remote_themes;
 use crate::themes::{self, ThemePreview};
 
 #[derive(Debug, thiserror::Error)]
@@ -192,6 +193,11 @@ pub fn list_theme_previews(
     let previews = themes::load_all()?;
     *state.theme_previews_cache.lock().unwrap() = Some(previews.clone());
     Ok(previews)
+}
+
+#[tauri::command]
+pub async fn list_remote_themes() -> Result<Vec<ThemePreview>, AppError> {
+    remote_themes::load().await
 }
 
 #[tauri::command]

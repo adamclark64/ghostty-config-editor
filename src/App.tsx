@@ -1,309 +1,262 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { api } from "@/api/tauri";
-import {
-  useConfigPaths,
-  useSchema,
-  useSessionStatus,
-} from "@/hooks/useSchema";
-import { useConfig } from "@/hooks/useConfig";
-import { Toolbar } from "@/components/Toolbar";
-import { KeyGroupList } from "@/components/KeyGroupList";
-import { FieldRenderer } from "@/components/FieldRenderer";
-import { ValidationPanel } from "@/components/ValidationPanel";
+import { useConfigPaths, useSchema, useSessionStatus } from "@/hooks/useSchema";
+import { ConfigProvider, useConfigCtx } from "@/context/ConfigContext";
+import { Titlebar } from "@/components/shell/Titlebar";
+import { Sidebar } from "@/components/shell/Sidebar";
+import { SectionEditor } from "@/components/shell/SectionEditor";
+import { PreviewPane } from "@/components/shell/PreviewPane";
+import { PaneHandle } from "@/components/shell/PaneHandle";
+import { Toast } from "@/components/shell/Toast";
 import { BackupList } from "@/components/BackupList";
 import { ThemeGallery } from "@/components/ThemeGallery";
-import type { ConfigEntry, ConfigKey, ValidationResult } from "@/types";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { usePaneLayout } from "@/hooks/usePaneLayout";
+import type { ConfigEntry, ValidationResult } from "@/types";
+import type { SectionId } from "@/lib/sections";
 
 export default function App() {
+  useColorScheme();
+
   const schemaQ = useSchema();
-  const pathsQ = useConfigPaths();
-  const sessionQ = useSessionStatus();
-  const config = useConfig(schemaQ.data);
-  const qc = useQueryClient();
-
-  const [search, setSearch] = useState("");
-  const [group, setGroup] = useState<string | null>(null);
-  const [validation, setValidation] = useState<ValidationResult | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [showBackups, setShowBackups] = useState(false);
-  const [showThemes, setShowThemes] = useState(false);
-
-  /** Validate → write (with backup) → reload Ghostty. Invalidates caches. */
-  async function saveAndReload(entries: ConfigEntry[], reload = true) {
-    try {
-      const r = await api.saveAndReload(entries, reload);
-      await qc.invalidateQueries({ queryKey: ["config"] });
-      await qc.invalidateQueries({ queryKey: ["backups"] });
-      await qc.invalidateQueries({ queryKey: ["session-status"] });
-      const reloadNote = r.reload_ok
-        ? "reloaded"
-        : r.reload_error
-        ? `saved (reload failed: ${r.reload_error})`
-        : "saved";
-      setToast(`Saved → ${reloadNote}`);
-      setTimeout(() => setToast(null), 5000);
-    } catch (e) {
-      setToast(`Save failed: ${String(e)}`);
-      setTimeout(() => setToast(null), 6000);
-    }
-  }
-
-  const saveMut = useMutation({
-    mutationFn: () => saveAndReload(config.draft, true),
-  });
-
-  const validateMut = useMutation({
-    mutationFn: () => api.validateConfig(config.draft),
-    onSuccess: (r) => setValidation(r),
-  });
-
-  async function handleRevert() {
-    if (config.isDirty) {
-      config.reset();
-      setToast("Dropped unsaved edits");
-      setTimeout(() => setToast(null), 2500);
-      return;
-    }
-    if (sessionQ.data?.is_modified) {
-      try {
-        await api.revertSession();
-        await api.reloadGhostty().catch(() => {}); // best-effort
-        await qc.invalidateQueries({ queryKey: ["config"] });
-        await qc.invalidateQueries({ queryKey: ["backups"] });
-        await qc.invalidateQueries({ queryKey: ["session-status"] });
-        setToast("Reverted to session start + reloaded Ghostty");
-        setTimeout(() => setToast(null), 4000);
-      } catch (e) {
-        setToast(`Revert failed: ${String(e)}`);
-        setTimeout(() => setToast(null), 5000);
-      }
-    }
-  }
-
-  async function handleImport() {
-    if (config.isDirty) {
-      const ok = window.confirm(
-        "You have unsaved edits. Importing will replace them. Continue?"
-      );
-      if (!ok) return;
-    }
-    try {
-      const picked = await openDialog({
-        multiple: false,
-        directory: false,
-        title: "Import Ghostty config",
-      });
-      if (!picked || typeof picked !== "string") return;
-      const entries = await api.readFileEntries(picked);
-      config.replace(entries);
-      validateMut.mutate();
-      setToast(
-        `Imported from ${picked.split("/").pop()} — review and Save & Reload`
-      );
-      setTimeout(() => setToast(null), 5000);
-    } catch (e) {
-      setToast(`Import failed: ${String(e)}`);
-      setTimeout(() => setToast(null), 6000);
-    }
-  }
-
-  async function handleExport() {
-    try {
-      const stamp = new Date()
-        .toISOString()
-        .slice(0, 10)
-        .replace(/-/g, "");
-      const picked = await saveDialog({
-        title: "Export Ghostty config",
-        defaultPath: `ghostty-config-${stamp}.conf`,
-      });
-      if (!picked) return;
-      await api.writeFileEntries(picked, config.draft);
-      setToast(`Exported → ${picked.split("/").pop()}`);
-      setTimeout(() => setToast(null), 4000);
-    } catch (e) {
-      setToast(`Export failed: ${String(e)}`);
-      setTimeout(() => setToast(null), 6000);
-    }
-  }
-
-  async function handleKeepSession() {
-    try {
-      await api.keepSession();
-      await qc.invalidateQueries({ queryKey: ["session-status"] });
-      setToast("Session baseline cleared — current config is your new start");
-      setTimeout(() => setToast(null), 4000);
-    } catch (e) {
-      setToast(`Keep failed: ${String(e)}`);
-      setTimeout(() => setToast(null), 5000);
-    }
-  }
-
-  const { groups, filteredKeys } = useMemo(() => {
-    const schema = schemaQ.data ?? [];
-    const buckets = new Map<string, ConfigKey[]>();
-    for (const k of schema) {
-      const arr = buckets.get(k.group) ?? [];
-      arr.push(k);
-      buckets.set(k.group, arr);
-    }
-    const groupList = Array.from(buckets.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([name, keys]) => {
-        const dirtyCount = keys.filter((k) => isKeyDirty(k)).length;
-        return { name, count: keys.length, dirtyCount };
-      });
-
-    const q = search.trim().toLowerCase();
-    const filtered = schema.filter((k) => {
-      if (group && k.group !== group) return false;
-      if (!q) return true;
-      return (
-        k.name.toLowerCase().includes(q) ||
-        k.docs.toLowerCase().includes(q)
-      );
-    });
-
-    return { groups: groupList, filteredKeys: filtered };
-
-    function isKeyDirty(k: ConfigKey): boolean {
-      const original = buildValuesMap(config.original)[k.name] ?? [];
-      const current = config.valuesByKey.get(k.name) ?? [];
-      return JSON.stringify(original) !== JSON.stringify(current);
-    }
-  }, [
-    schemaQ.data,
-    config.original,
-    config.valuesByKey,
-    search,
-    group,
-  ]);
-
-  /**
-   * Apply a set of key→values overrides to the current on-disk config and
-   * immediately save + reload. Used by the theme gallery so picking a theme
-   * is a live, one-click preview.
-   *
-   * We replace the draft with the merged result before saving so the field
-   * editor immediately reflects the applied theme. Without this, `draft`
-   * holds the pre-theme values while disk (and `original` once refetched)
-   * advances — making the UI look unchanged *and* re-enabling Save, which
-   * would then write the stale draft back and revert the theme.
-   */
-  async function applyEntriesAndGo(entries: Array<[string, string[]]>) {
-    const base = config.original.slice();
-    const next = mergeValues(base, entries);
-    config.replace(next);
-    await saveAndReload(next, true);
-  }
-
-  const configPath = pathsQ.data?.real;
 
   if (schemaQ.isLoading) {
-    return <Centered>Loading Ghostty schema…</Centered>;
-  }
-  if (schemaQ.error) {
     return (
       <Centered>
-        <div className="text-red-300">{String(schemaQ.error)}</div>
+        <span style={{ color: "var(--muted)" }}>Loading Ghostty schema…</span>
+      </Centered>
+    );
+  }
+  if (schemaQ.error || !schemaQ.data) {
+    return (
+      <Centered>
+        <span style={{ color: "var(--danger)" }}>
+          {String(schemaQ.error ?? "Failed to load schema")}
+        </span>
       </Centered>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <Toolbar
-        configPath={configPath}
-        isDirty={config.isDirty}
-        saving={saveMut.isPending}
-        session={sessionQ.data}
-        onSaveAndReload={() => saveMut.mutate()}
-        onValidate={() => validateMut.mutate()}
+    <ConfigProvider schema={schemaQ.data}>
+      <Shell schema={schemaQ.data} />
+    </ConfigProvider>
+  );
+}
+
+interface ToastState {
+  message: string;
+  tone: "info" | "success" | "error";
+}
+
+function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
+  const pathsQ = useConfigPaths();
+  const sessionQ = useSessionStatus();
+  const qc = useQueryClient();
+  const cfg = useConfigCtx();
+  const { preference: schemePreference, cycle: cycleScheme } = useColorScheme();
+  const panes = usePaneLayout();
+
+  const [activeSection, setActiveSection] = useState<SectionId>("colors");
+  const [query, setQuery] = useState("");
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
+  const [showBackups, setShowBackups] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+
+  const showToast = (message: string, tone: ToastState["tone"] = "info") => {
+    setToast({ message, tone });
+    window.setTimeout(() => setToast(null), 4500);
+  };
+
+  const unsavedCount = useMemo(() => countChangedKeys(cfg.original, cfg.draft), [
+    cfg.original,
+    cfg.draft,
+  ]);
+
+  const saveMut = useMutation({
+    mutationFn: async () => api.saveAndReload(cfg.draft, true),
+    onSuccess: async (r) => {
+      await qc.invalidateQueries({ queryKey: ["config"] });
+      await qc.invalidateQueries({ queryKey: ["backups"] });
+      await qc.invalidateQueries({ queryKey: ["session-status"] });
+      if (r.reload_ok) {
+        showToast("Saved. Ghostty reloaded.", "success");
+      } else if (r.reload_error) {
+        showToast(`Saved; reload failed: ${r.reload_error}`, "info");
+      } else {
+        showToast("Saved.", "success");
+      }
+    },
+    onError: (e) => showToast(`Save failed: ${String(e)}`, "error"),
+  });
+
+  const validateMut = useMutation({
+    mutationFn: () => api.validateConfig(cfg.draft),
+    onSuccess: (r) => {
+      setValidation(r);
+      if (r.ok) showToast("Configuration is valid.", "success");
+      else showToast("Validation failed — see preview pane.", "error");
+    },
+    onError: (e) => showToast(`Validate failed: ${String(e)}`, "error"),
+  });
+
+  async function handleRevert() {
+    if (cfg.isDirty) {
+      cfg.reset();
+      setValidation(null);
+      showToast("Dropped unsaved edits.", "info");
+      return;
+    }
+    // Second-tier revert: restore the on-disk config to the session baseline.
+    if (sessionQ.data?.is_modified) {
+      try {
+        await api.revertSession();
+        await api.reloadGhostty().catch(() => {});
+        await qc.invalidateQueries({ queryKey: ["config"] });
+        await qc.invalidateQueries({ queryKey: ["backups"] });
+        await qc.invalidateQueries({ queryKey: ["session-status"] });
+        showToast("Reverted to session baseline + reloaded Ghostty.", "success");
+      } catch (e) {
+        showToast(`Revert failed: ${String(e)}`, "error");
+      }
+    }
+  }
+
+  const revertDisabled = !cfg.isDirty && !sessionQ.data?.is_modified;
+
+  return (
+    <div className="h-full flex flex-col" style={{ background: "var(--bg)" }}>
+      <Titlebar
+        title="Ghostty Config"
+        configPath={pathsQ.data?.real}
+        dirty={cfg.isDirty}
+        compareOpen={compareOpen}
+        onCompare={() => setCompareOpen((v) => !v)}
         onRevert={handleRevert}
-        onKeepSession={handleKeepSession}
-        onShowBackups={() => setShowBackups(true)}
-        onShowThemes={() => setShowThemes(true)}
-        onImport={handleImport}
-        onExport={handleExport}
-        search={search}
-        onSearch={setSearch}
+        revertDisabled={revertDisabled}
+        onValidate={() => validateMut.mutate()}
+        validating={validateMut.isPending}
+        onSave={() => saveMut.mutate()}
+        saving={saveMut.isPending}
+        sidebarCollapsed={panes.sidebarCollapsed}
+        onToggleSidebar={panes.toggleSidebar}
+        previewCollapsed={panes.previewCollapsed}
+        onTogglePreview={panes.togglePreview}
+        schemePreference={schemePreference}
+        onCycleScheme={cycleScheme}
       />
-      <div className="flex-1 grid grid-cols-[220px_1fr_360px] min-h-0">
-        <aside className="border-r border-zinc-800 scroll-y chrome-panel">
-          <KeyGroupList groups={groups} selected={group} onSelect={setGroup} />
-        </aside>
-        <main className="scroll-y">
-          {filteredKeys.map((k) => {
-            const current = config.valuesByKey.get(k.name) ?? [""];
-            const isDirty =
-              JSON.stringify(buildValuesMap(config.original)[k.name] ?? []) !==
-              JSON.stringify(config.valuesByKey.get(k.name) ?? []);
-            return (
-              <FieldRenderer
-                key={k.name}
-                def={k}
-                values={current}
-                isDirty={isDirty}
-                onChange={(values) => config.setValues(k.name, values)}
-              />
-            );
-          })}
-          {filteredKeys.length === 0 && (
-            <div className="p-8 text-sm text-zinc-400">No matching keys.</div>
-          )}
-        </main>
-        <aside className="border-l border-zinc-800 scroll-y chrome-panel">
-          <div className="p-4 border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-500">
-            Validation
+      <div className="flex-1 min-h-0 flex">
+        {!panes.sidebarCollapsed && (
+          <div
+            className="flex-shrink-0 min-h-0"
+            style={{ width: panes.sidebarWidth }}
+          >
+            <Sidebar
+              active={activeSection}
+              onSelect={setActiveSection}
+              query={query}
+              onQueryChange={setQuery}
+              connected={!!sessionQ.data?.baseline_exists}
+              unsavedCount={unsavedCount}
+              schema={schema}
+              onShowBackups={() => setShowBackups(true)}
+            />
           </div>
-          <ValidationPanel result={validation} />
-        </aside>
+        )}
+        <PaneHandle
+          side="left"
+          label="Sidebar"
+          collapsed={panes.sidebarCollapsed}
+          onResize={(dx) => panes.setSidebarWidth(panes.sidebarWidth + dx)}
+          onToggle={panes.toggleSidebar}
+        />
+        <SectionEditor
+          active={activeSection}
+          compareBanner={compareOpen}
+          onBrowseThemes={() => setShowThemes(true)}
+        />
+        <PaneHandle
+          side="right"
+          label="Preview"
+          collapsed={panes.previewCollapsed}
+          onResize={(dx) => panes.setPreviewWidth(panes.previewWidth + dx)}
+          onToggle={panes.togglePreview}
+        />
+        {!panes.previewCollapsed && (
+          <div
+            className="flex-shrink-0 min-h-0"
+            style={{ width: panes.previewWidth }}
+          >
+            <PreviewPane
+              compareOpen={compareOpen}
+              validation={validation}
+              liveHeight={panes.liveHeight}
+              onResizeLive={(dy) => panes.setLiveHeight(panes.liveHeight + dy)}
+            />
+          </div>
+        )}
       </div>
-      {toast && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 chrome-panel border border-zinc-700 rounded text-sm text-zinc-100">
-          {toast}
-        </div>
-      )}
-      {showBackups && <BackupList onClose={() => setShowBackups(false)} />}
+
       {showThemes && (
         <ThemeGallery
           onClose={() => setShowThemes(false)}
           onApplyEntries={(entries) => {
-            applyEntriesAndGo(entries);
+            const next = mergeValues(cfg.original, entries);
+            cfg.replace(next);
+            setShowThemes(false);
+            showToast("Theme applied to draft. Save & Reload to commit.", "info");
           }}
         />
       )}
+
+      {showBackups && <BackupList onClose={() => setShowBackups(false)} />}
+
+      {toast && <Toast message={toast.message} tone={toast.tone} />}
     </div>
   );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-full flex items-center justify-center text-zinc-400 text-sm">
+    <div
+      className="h-full flex items-center justify-center text-sm"
+      style={{ background: "var(--bg)" }}
+    >
       {children}
     </div>
   );
 }
 
-function buildValuesMap(entries: ConfigEntry[]): Record<string, string[]> {
-  const m: Record<string, string[]> = {};
-  for (const e of entries) {
-    if (e.kind === "entry") {
-      (m[e.key] ??= []).push(e.value);
+function countChangedKeys(original: ConfigEntry[], draft: ConfigEntry[]): number {
+  const byKey = (list: ConfigEntry[]) => {
+    const m = new Map<string, string[]>();
+    for (const e of list) {
+      if (e.kind === "entry") {
+        const arr = m.get(e.key) ?? [];
+        arr.push(e.value);
+        m.set(e.key, arr);
+      }
     }
+    return m;
+  };
+  const a = byKey(original);
+  const b = byKey(draft);
+  const keys = new Set([...a.keys(), ...b.keys()]);
+  let n = 0;
+  for (const k of keys) {
+    if (JSON.stringify(a.get(k) ?? []) !== JSON.stringify(b.get(k) ?? [])) n++;
   }
-  return m;
+  return n;
 }
 
 /**
- * Given an on-disk entry list and a set of [key, values] overrides, produce
- * a new entry list where:
- *   - all existing entries for overridden keys are removed
- *   - the new values are inserted at the position of the first removed entry
- *     (or appended before trailing blanks if the key wasn't present)
- *   - comments / blank lines / other keys are preserved
+ * Apply `[key, values]` overrides onto an existing entry list, preserving
+ * comments and blanks. An empty `values` array clears the key entirely.
+ * New values slot in at the position of the first removed entry, or at the
+ * end (before trailing blanks) if the key wasn't already present.
  */
 function mergeValues(
   base: ConfigEntry[],
@@ -320,21 +273,18 @@ function mergeValues(
       }
       filtered.push(e);
     }
-    const nonEmpty = values.filter((v) => v !== "");
-    const newEntries: ConfigEntry[] = nonEmpty.map((value) => ({
-      kind: "entry" as const,
-      key,
-      value,
-    }));
+    const toInsert: ConfigEntry[] = values
+      .filter((v) => v !== "")
+      .map((value) => ({ kind: "entry" as const, key, value }));
     if (insertAt === null) {
       let tailBlanks = 0;
       for (let i = filtered.length - 1; i >= 0; i--) {
         if (filtered[i].kind === "blank") tailBlanks++;
         else break;
       }
-      filtered.splice(filtered.length - tailBlanks, 0, ...newEntries);
+      filtered.splice(filtered.length - tailBlanks, 0, ...toInsert);
     } else {
-      filtered.splice(insertAt, 0, ...newEntries);
+      filtered.splice(insertAt, 0, ...toInsert);
     }
     next = filtered;
   }

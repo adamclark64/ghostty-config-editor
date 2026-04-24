@@ -9,11 +9,11 @@
 use std::fs;
 use std::path::PathBuf;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::commands::AppError;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThemePreview {
     pub name: String,
     /// 16 palette slots (indexes 0..15). Missing entries are empty strings.

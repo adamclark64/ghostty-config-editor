@@ -55,6 +55,20 @@ export function useThemePreviews() {
   });
 }
 
+/**
+ * Themes from the iTerm2-Color-Schemes GitHub repo. Fetched and cached on
+ * the Rust side (24h TTL); on first open this triggers a ~300-request fan-out
+ * so the query can take a few seconds. Subsequent calls are instant.
+ */
+export function useRemoteThemes(enabled: boolean) {
+  return useQuery({
+    queryKey: ["remote-themes"],
+    queryFn: api.listRemoteThemes,
+    enabled,
+    staleTime: Infinity,
+  });
+}
+
 export function useSessionStatus() {
   return useQuery({
     queryKey: ["session-status"],
