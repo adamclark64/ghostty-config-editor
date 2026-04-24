@@ -80,4 +80,30 @@ mod tests {
         let out = serialize(&parsed);
         assert_eq!(out, input);
     }
+
+    /// Unknown keys (not in the editor's schema) and repeatable keys with
+    /// multiple occurrences must round-trip without loss, preserving their
+    /// original order relative to surrounding comments. The UI relies on
+    /// this so it can surface "Unknown keys" without touching the on-disk
+    /// entries that live under them.
+    #[test]
+    fn round_trips_unknown_and_repeatable_keys() {
+        let input = "\
+# palette
+palette = 0=#000000
+palette = 1=#ff0000
+palette = 2=#00ff00
+
+# experimental knobs not surfaced in the UI
+unknown-future-key = 42
+another-unknown = hello world
+
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+";
+        let parsed = parse(input);
+        let out = serialize(&parsed);
+        assert_eq!(out, input);
+    }
+
 }

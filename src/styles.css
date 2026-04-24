@@ -1,45 +1,48 @@
+@import "./design/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
-
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   overflow: hidden;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  background: #0d0e13;
-  color: #ecedef;
+  font-family: Inter, system-ui, -apple-system, "SF Pro Text", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Keep chrome fully opaque even when the macOS window loses focus
-   (otherwise macOS desaturates the whole window). */
-.chrome-panel { background: #16171f; }
-.chrome-input { background: #090a0f; }
+.font-mono-ui {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
 
-.scroll-y { overflow-y: auto; }
-.scroll-y::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-y {
+  overflow-y: auto;
+}
+.scroll-y::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 .scroll-y::-webkit-scrollbar-thumb {
-  background: #2c2e3a;
+  background: var(--border-strong);
   border-radius: 8px;
 }
-.scroll-y::-webkit-scrollbar-thumb:hover { background: #3a3c49; }
-
-input, select, button, textarea {
-  font-family: inherit;
-  color: inherit;
+.scroll-y::-webkit-scrollbar-thumb:hover {
+  background: var(--subtle);
 }
 
-input[type="color"] {
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
+input,
+select,
+button,
+textarea {
+  font-family: inherit;
+  color: inherit;
 }
