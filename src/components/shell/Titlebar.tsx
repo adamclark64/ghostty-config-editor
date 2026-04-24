@@ -8,6 +8,7 @@ interface TitlebarProps {
   dirty: boolean;
   compareOpen: boolean;
   onCompare: () => void;
+  onRandomize: () => void;
   onRevert: () => void;
   revertDisabled?: boolean;
   onValidate: () => void;
@@ -28,6 +29,7 @@ export function Titlebar({
   dirty,
   compareOpen,
   onCompare,
+  onRandomize,
   onRevert,
   revertDisabled,
   onValidate,
@@ -88,6 +90,13 @@ export function Titlebar({
           icon={schemeIcon}
           title={`${schemeLabel} — click to cycle`}
         />
+        <HeaderButton
+          onClick={onRandomize}
+          icon="shuffle"
+          title="Randomize colors — generates a fresh palette / bg / fg / cursor"
+        >
+          Randomize
+        </HeaderButton>
         <HeaderButton
           onClick={onCompare}
           icon="diff"
@@ -162,6 +171,7 @@ interface HeaderButtonProps {
   primary?: boolean;
   active?: boolean;
   disabled?: boolean;
+  title?: string;
   children: React.ReactNode;
 }
 
@@ -171,6 +181,7 @@ function HeaderButton({
   primary,
   active,
   disabled,
+  title,
   children,
 }: HeaderButtonProps) {
   const base =
@@ -193,7 +204,13 @@ function HeaderButton({
         border: "1px solid var(--border)",
       };
   return (
-    <button className={base} style={style} onClick={onClick} disabled={disabled}>
+    <button
+      className={base}
+      style={style}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+    >
       <Icon name={icon} size={13} />
       {children}
     </button>

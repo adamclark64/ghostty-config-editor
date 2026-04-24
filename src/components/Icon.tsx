@@ -27,7 +27,8 @@ export type IconName =
   | "moon"
   | "system"
   | "panel-left"
-  | "panel-right";
+  | "panel-right"
+  | "shuffle";
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, "stroke"> {
   name: IconName;
@@ -249,6 +250,16 @@ export function Icon({ name, size = 16, stroke = 1.5, ...rest }: IconProps) {
         <svg {...base}>
           <rect x="3" y="4" width="18" height="16" rx="2" />
           <line x1="15" y1="4" x2="15" y2="20" />
+        </svg>
+      );
+    case "shuffle":
+      return (
+        <svg {...base}>
+          <polyline points="16 3 21 3 21 8" />
+          <line x1="4" y1="20" x2="21" y2="3" />
+          <polyline points="21 16 21 21 16 21" />
+          <line x1="15" y1="15" x2="21" y2="21" />
+          <line x1="4" y1="4" x2="9" y2="9" />
         </svg>
       );
   }
