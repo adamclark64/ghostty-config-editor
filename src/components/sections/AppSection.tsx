@@ -4,10 +4,19 @@ import {
   Segmented,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 import { isLinux, isMac } from "@/lib/platform";
 
 const BELL_FEATURES = ["audio", "system", "attention", "title"] as const;
+
+const APP_HANDLED = [
+  "bell-features",
+  "desktop-notifications",
+  "gtk-single-instance",
+  "macos-non-native-fullscreen",
+  "macos-option-as-alt",
+] as const;
 
 export function AppSection() {
   const cfg = useConfigCtx();
@@ -100,6 +109,7 @@ export function AppSection() {
           onChange={(v) => cfg.set("desktop-notifications", String(v))}
         />
       </FieldRow>
+      <MoreSettings sectionId="app" handled={APP_HANDLED} />
     </>
   );
 }

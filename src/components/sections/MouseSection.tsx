@@ -4,7 +4,15 @@ import {
   Slider,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
+
+const MOUSE_HANDLED = [
+  "focus-follows-mouse",
+  "mouse-hide-while-typing",
+  "mouse-scroll-multiplier",
+  "mouse-shift-capture",
+] as const;
 
 export function MouseSection() {
   const cfg = useConfigCtx();
@@ -61,6 +69,7 @@ export function MouseSection() {
           onChange={(v) => cfg.set("focus-follows-mouse", String(v))}
         />
       </FieldRow>
+      <MoreSettings sectionId="mouse" handled={MOUSE_HANDLED} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
 import { SecHeader } from "@/components/primitives/layout";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 import {
   chordParts,
@@ -185,6 +186,7 @@ export function KeybindsSection() {
           }}
         />
       )}
+      <MoreSettings sectionId="keybinds" handled={["keybind"]} />
     </>
   );
 }

@@ -3,11 +3,19 @@ import { ColorSwatch } from "@/components/primitives/ColorSwatch";
 import { DocsLink } from "@/components/primitives/DocsLink";
 import { GroupLabel, SecHeader } from "@/components/primitives/layout";
 import { ColorRow } from "./ColorRow";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 import { useThemePreviews } from "@/hooks/useSchema";
 import { themeAsExplicitEntries, toCard } from "@/lib/theme-previews";
 import { ANSI_FALLBACK, emitPalette, parsePalette } from "@/lib/palette";
 import { luminance } from "@/lib/color";
+
+const COLORS_HANDLED = [
+  "background",
+  "foreground",
+  "palette",
+  "theme",
+] as const;
 
 interface ColorsSectionProps {
   onBrowseThemes: () => void;
@@ -244,6 +252,7 @@ export function ColorsSection({ onBrowseThemes }: ColorsSectionProps) {
           </div>
         </div>
       </div>
+      <MoreSettings sectionId="colors" handled={COLORS_HANDLED} />
     </>
   );
 }

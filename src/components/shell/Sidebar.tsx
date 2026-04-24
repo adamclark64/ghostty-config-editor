@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Icon } from "@/components/Icon";
-import { SECTIONS, type SectionId } from "@/lib/sections";
+import { SECTIONS, sectionForKey, type SectionId } from "@/lib/sections";
 import type { ConfigKey } from "@/types";
 
 interface SidebarProps {
   active: SectionId;
   onSelect: (id: SectionId) => void;
+  onJumpToKey: (id: SectionId, key: string) => void;
   query: string;
   onQueryChange: (q: string) => void;
   connected: boolean;
@@ -14,50 +15,10 @@ interface SidebarProps {
   onShowBackups: () => void;
 }
 
-/**
- * Ghostty's `group` metadata is human-readable prose; this map aligns the
- * schema's groups to our sidebar section IDs for the ⌘K key-match sub-list.
- */
-const GROUP_TO_SECTION: Record<string, SectionId> = {
-  colors: "colors",
-  color: "colors",
-  theme: "colors",
-  font: "font",
-  cursor: "cursor",
-  window: "window",
-  keybind: "keybinds",
-  keybinds: "keybinds",
-  mouse: "mouse",
-  rendering: "rendering",
-  render: "rendering",
-  scrollback: "scrollback",
-  shell: "shell",
-  clipboard: "clipboard",
-  app: "app",
-  advanced: "advanced",
-};
-
-function sectionForKey(k: ConfigKey): SectionId {
-  const lower = k.group.toLowerCase();
-  for (const [needle, sec] of Object.entries(GROUP_TO_SECTION)) {
-    if (lower.includes(needle)) return sec;
-  }
-  // Prefix-based fallback for common ghostty conventions.
-  if (k.name.startsWith("font-")) return "font";
-  if (k.name.startsWith("cursor-")) return "cursor";
-  if (k.name.startsWith("window-")) return "window";
-  if (k.name.startsWith("macos-")) return "app";
-  if (k.name.startsWith("gtk-")) return "app";
-  if (k.name.startsWith("clipboard-")) return "clipboard";
-  if (k.name.startsWith("background-") || k.name.startsWith("palette")) return "colors";
-  if (k.name.startsWith("shell-")) return "shell";
-  if (k.name.startsWith("mouse-")) return "mouse";
-  return "advanced";
-}
-
 export function Sidebar({
   active,
   onSelect,
+  onJumpToKey,
   query,
   onQueryChange,
   connected,
@@ -115,19 +76,41 @@ export function Sidebar({
             ref={searchRef}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && query) {
+                e.preventDefault();
+                onQueryChange("");
+              }
+            }}
             placeholder="Search sections & keys"
             className="flex-1 bg-transparent border-none outline-none text-[12px] text-fg placeholder:text-subtle"
           />
-          <span
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-            style={{
-              background: "var(--surface-raised)",
-              color: "var(--muted)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            ⌘K
-          </span>
+          {query ? (
+            <button
+              type="button"
+              onClick={() => {
+                onQueryChange("");
+                searchRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              title="Clear (Esc)"
+              className="inline-flex items-center justify-center w-[18px] h-[18px] rounded"
+              style={{ color: "var(--muted)" }}
+            >
+              <Icon name="x" size={12} />
+            </button>
+          ) : (
+            <span
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+              style={{
+                background: "var(--surface-raised)",
+                color: "var(--muted)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              ⌘K
+            </span>
+          )}
         </label>
       </div>
 
@@ -183,7 +166,7 @@ export function Sidebar({
                 return (
                   <li key={k.name}>
                     <button
-                      onClick={() => onSelect(sec)}
+                      onClick={() => onJumpToKey(sec, k.name)}
                       className="w-full text-left px-3 py-1 rounded-md text-[11.5px] font-mono"
                       style={{
                         background: "transparent",

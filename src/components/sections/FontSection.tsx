@@ -7,9 +7,20 @@ import {
   TextInput,
   Toggle,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 import { useFonts } from "@/hooks/useSchema";
 import { ANSI_FALLBACK, parsePalette } from "@/lib/palette";
+
+const FONT_HANDLED = [
+  "font-family",
+  "font-family-bold",
+  "font-family-bold-italic",
+  "font-family-italic",
+  "font-feature",
+  "font-size",
+  "font-thicken",
+] as const;
 
 const CURATED_FONTS: readonly string[] = [
   "JetBrainsMono Nerd Font",
@@ -242,6 +253,7 @@ export function FontSection() {
           })}
         </div>
       </FieldRow>
+      <MoreSettings sectionId="font" handled={FONT_HANDLED} />
     </>
   );
 }

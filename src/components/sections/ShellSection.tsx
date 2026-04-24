@@ -5,9 +5,18 @@ import {
   Segmented,
   TextInput,
 } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
 
 const SHELL_FEATURES = ["cursor", "sudo", "title", "ssh-env", "ssh-terminfo"] as const;
+
+const SHELL_HANDLED = [
+  "command",
+  "shell-integration",
+  "shell-integration-features",
+  "term",
+  "working-directory",
+] as const;
 
 export function ShellSection() {
   const cfg = useConfigCtx();
@@ -104,6 +113,7 @@ export function ShellSection() {
           width={220}
         />
       </FieldRow>
+      <MoreSettings sectionId="shell" handled={SHELL_HANDLED} />
     </>
   );
 }

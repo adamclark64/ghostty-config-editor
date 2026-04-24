@@ -1,6 +1,16 @@
 import { FieldRow, SecHeader } from "@/components/primitives/layout";
 import { Segmented, Toggle } from "@/components/primitives/inputs";
+import { MoreSettings } from "@/components/primitives/MoreSettings";
 import { useConfigCtx } from "@/context/ConfigContext";
+
+const CLIPBOARD_HANDLED = [
+  "clipboard-paste-bracketed-safe",
+  "clipboard-paste-protection",
+  "clipboard-read",
+  "clipboard-trim-trailing-spaces",
+  "clipboard-write",
+  "copy-on-select",
+] as const;
 
 export function ClipboardSection() {
   const cfg = useConfigCtx();
@@ -59,6 +69,7 @@ export function ClipboardSection() {
           options={["true", "false", "clipboard"]}
         />
       </FieldRow>
+      <MoreSettings sectionId="clipboard" handled={CLIPBOARD_HANDLED} />
     </>
   );
 }
