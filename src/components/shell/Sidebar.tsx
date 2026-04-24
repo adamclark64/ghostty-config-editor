@@ -6,6 +6,7 @@ import type { ConfigKey } from "@/types";
 interface SidebarProps {
   active: SectionId;
   onSelect: (id: SectionId) => void;
+  onJumpToKey: (id: SectionId, key: string) => void;
   query: string;
   onQueryChange: (q: string) => void;
   connected: boolean;
@@ -17,6 +18,7 @@ interface SidebarProps {
 export function Sidebar({
   active,
   onSelect,
+  onJumpToKey,
   query,
   onQueryChange,
   connected,
@@ -164,7 +166,7 @@ export function Sidebar({
                 return (
                   <li key={k.name}>
                     <button
-                      onClick={() => onSelect(sec)}
+                      onClick={() => onJumpToKey(sec, k.name)}
                       className="w-full text-left px-3 py-1 rounded-md text-[11.5px] font-mono"
                       style={{
                         background: "transparent",

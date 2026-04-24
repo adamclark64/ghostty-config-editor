@@ -77,6 +77,7 @@ export function FieldRow({
     <div
       className="flex items-start gap-3 px-6 py-2.5 border-b"
       style={{ borderColor: "var(--border)" }}
+      data-config-key={resolvedKey ?? undefined}
     >
       <div className="w-[200px] flex-shrink-0 pt-1">
         <div

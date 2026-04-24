@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { FieldRow } from "@/components/primitives/layout";
 import { ColorSwatch } from "@/components/primitives/ColorSwatch";
 import {
@@ -13,19 +13,18 @@ import type { ConfigKey } from "@/types";
 
 /**
  * Catch-all renderer for schema keys routed to this section that the
- * hand-crafted section UI hasn't surfaced explicitly. Guarantees that every
- * key the search lands on can be edited somewhere, even if coarsely.
+ * hand-crafted section UI hasn't surfaced explicitly. Always rendered
+ * inline so every key is directly scrollable / targetable from the
+ * sidebar search.
  */
 export function MoreSettings({
   sectionId,
   handled,
   title = "More settings",
-  subtitle,
 }: {
   sectionId: SectionId;
   handled: readonly string[];
   title?: string;
-  subtitle?: string;
 }) {
   const cfg = useConfigCtx();
   const handledSet = useMemo(() => new Set(handled), [handled]);
@@ -38,54 +37,33 @@ export function MoreSettings({
     [cfg.schema, sectionId, handledSet]
   );
 
-  const [expanded, setExpanded] = useState(false);
-
   if (keys.length === 0) return null;
 
   return (
     <>
       <div
-        className="flex items-center justify-between px-6 pt-[14px] pb-1.5 cursor-pointer"
-        onClick={() => setExpanded((v) => !v)}
+        className="flex items-baseline gap-2 px-6 pt-[14px] pb-1.5"
+        style={{ color: "var(--subtle)" }}
       >
-        <div
-          className="text-[10.5px] font-bold uppercase tracking-[0.06em]"
-          style={{ color: "var(--subtle)" }}
-        >
+        <span className="text-[10.5px] font-bold uppercase tracking-[0.06em]">
           {title}
-          <span
-            className="ml-2 tabular-nums"
-            style={{ color: "var(--muted)" }}
-          >
-            {keys.length}
-          </span>
-        </div>
-        <button
-          type="button"
-          className="text-[11px] font-medium"
+        </span>
+        <span
+          className="text-[11px] tabular-nums"
           style={{ color: "var(--muted)" }}
         >
-          {expanded ? "Hide" : "Show"}
-        </button>
+          {keys.length}
+        </span>
       </div>
-      {subtitle && (
-        <div
-          className="px-6 pb-2 text-[11.5px] max-w-[620px]"
-          style={{ color: "var(--muted)" }}
+      {keys.map((k) => (
+        <FieldRow
+          key={k.name}
+          label={k.name}
+          defaultValue={k.defaults[0]}
         >
-          {subtitle}
-        </div>
-      )}
-      {expanded &&
-        keys.map((k) => (
-          <FieldRow
-            key={k.name}
-            label={k.name}
-            defaultValue={k.defaults[0]}
-          >
-            <GenericField k={k} />
-          </FieldRow>
-        ))}
+          <GenericField k={k} />
+        </FieldRow>
+      ))}
     </>
   );
 }

@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { SectionEditor } from "@/components/shell/SectionEditor";
 import { PreviewPane } from "@/components/shell/PreviewPane";
 import { PaneHandle } from "@/components/shell/PaneHandle";
+import type { TargetKey } from "@/components/shell/SectionEditor";
 import { Toast } from "@/components/shell/Toast";
 import { BackupList } from "@/components/BackupList";
 import { ThemeGallery } from "@/components/ThemeGallery";
@@ -65,6 +66,12 @@ function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
   const [showBackups, setShowBackups] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [target, setTarget] = useState<TargetKey | null>(null);
+
+  const jumpToKey = (id: SectionId, key: string) => {
+    setActiveSection(id);
+    setTarget((prev) => ({ key, nonce: (prev?.nonce ?? 0) + 1 }));
+  };
 
   const showToast = (message: string, tone: ToastState["tone"] = "info") => {
     setToast({ message, tone });
@@ -157,6 +164,7 @@ function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
             <Sidebar
               active={activeSection}
               onSelect={setActiveSection}
+              onJumpToKey={jumpToKey}
               query={query}
               onQueryChange={setQuery}
               connected={!!sessionQ.data?.baseline_exists}
@@ -177,6 +185,7 @@ function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
           active={activeSection}
           compareBanner={compareOpen}
           onBrowseThemes={() => setShowThemes(true)}
+          target={target}
         />
         <PaneHandle
           side="right"

@@ -263,11 +263,7 @@ export function WindowSection() {
         />
       </FieldRow>
 
-      <MoreSettings
-        sectionId="window"
-        handled={WINDOW_HANDLED}
-        subtitle="Every remaining window-group schema key, editable with a generic widget inferred from its type."
-      />
+      <MoreSettings sectionId="window" handled={WINDOW_HANDLED} />
     </>
   );
 }
