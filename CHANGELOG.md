@@ -1,5 +1,15 @@
 # ghostty-config-editor
 
+## 0.5.0
+
+### Minor Changes
+
+- [#10](https://github.com/adamclark64/ghostty-config-editor/pull/10) [`da48f95`](https://github.com/adamclark64/ghostty-config-editor/commit/da48f95ef45d62a035d306a76debc96809375990) Thanks [@adamclark64](https://github.com/adamclark64)! - Make the preview pane's diff editable: edit the `+` value inline or click ↺ to revert that entry (per-slot for palette, per-chord for keybind).
+
+- [#13](https://github.com/adamclark64/ghostty-config-editor/pull/13) [`0932a49`](https://github.com/adamclark64/ghostty-config-editor/commit/0932a49c1c70022a1f158fb6bce479b10109e056) Thanks [@adamclark64](https://github.com/adamclark64)! - Every schema key now has an editable UI. Each section gets a **More settings** catch-all at the bottom that renders the remaining keys routed to it (e.g. `macos-icon`, `macos-icon-frame`, and the 40+ other long-tail window keys) with generic widgets inferred from the key's type. Also: clear the sidebar search with the new **×** button or Esc.
+
+- [#11](https://github.com/adamclark64/ghostty-config-editor/pull/11) [`8c1318a`](https://github.com/adamclark64/ghostty-config-editor/commit/8c1318a2f010e65c7f08848e4bb6767f7a180d7b) Thanks [@adamclark64](https://github.com/adamclark64)! - Bring back the randomize affordances: a **Randomize** button in the titlebar generates a fresh cohesive palette + background / foreground / cursor, and a **Random theme** button in the theme gallery picks one theme at random from the built-in and community pools.
+
 ## 0.4.0
 
 ### Minor Changes
