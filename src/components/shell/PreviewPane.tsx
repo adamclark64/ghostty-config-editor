@@ -225,6 +225,7 @@ interface DiffRecord {
 }
 
 function DiffEntry({ entry }: { entry: DiffRecord }) {
+  const cfg = useConfigCtx();
   const { key, before, after } = entry;
 
   // Palette and keybind render per-slot / per-chord so users see which row
@@ -233,29 +234,95 @@ function DiffEntry({ entry }: { entry: DiffRecord }) {
     return <ListDiff record={entry} />;
   }
 
+  const onEdit = (index: number, next: string) => {
+    const updated = [...after];
+    updated[index] = next;
+    cfg.setAll(key, updated);
+  };
+
   return (
-    <div className="flex flex-col gap-[1px]">
-      {after.map((v, i) => (
-        <span key={`a${i}`} style={{ color: "var(--success)" }}>
-          + {key} = {v}
-        </span>
-      ))}
-      {before.map((v, i) => (
-        <span
-          key={`b${i}`}
-          style={{
-            color: "var(--muted)",
-            textDecoration: "line-through",
-          }}
-        >
-          − {key} = {v}
-        </span>
-      ))}
+    <div className="flex items-start gap-2">
+      <div className="flex-1 flex flex-col gap-[1px] min-w-0">
+        {after.length === 0 ? (
+          <span className="italic" style={{ color: "var(--muted)" }}>
+            (removed)
+          </span>
+        ) : (
+          after.map((v, i) => (
+            <EditableLine
+              key={`a${i}`}
+              prefix={`+ ${key} = `}
+              value={v}
+              onChange={(nv) => onEdit(i, nv)}
+            />
+          ))
+        )}
+        {before.map((v, i) => (
+          <span
+            key={`b${i}`}
+            style={{
+              color: "var(--muted)",
+              textDecoration: "line-through",
+            }}
+          >
+            − {key} = {v}
+          </span>
+        ))}
+      </div>
+      <RevertButton onClick={() => cfg.setAll(key, before)} />
     </div>
   );
 }
 
+function EditableLine({
+  prefix,
+  value,
+  onChange,
+}: {
+  prefix: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center" style={{ color: "var(--success)" }}>
+      <span className="whitespace-pre">{prefix}</span>
+      <input
+        className="flex-1 min-w-0 font-mono text-[11px] bg-transparent outline-none border-0 p-0 m-0"
+        style={{ color: "var(--success)" }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        spellCheck={false}
+      />
+    </div>
+  );
+}
+
+function RevertButton({
+  onClick,
+  title,
+}: {
+  onClick: () => void;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title ?? "Revert this change"}
+      className="shrink-0 text-[10px] px-1.5 py-0.5 rounded font-mono"
+      style={{
+        color: "var(--muted)",
+        background: "var(--surface-raised)",
+        border: "1px solid var(--border)",
+      }}
+    >
+      ↺
+    </button>
+  );
+}
+
 function ListDiff({ record }: { record: DiffRecord }) {
+  const cfg = useConfigCtx();
   const { key, before, after } = record;
   const identify = key === "palette" ? paletteId : keybindId;
   const idx = (list: string[]) => {
@@ -276,45 +343,52 @@ function ListDiff({ record }: { record: DiffRecord }) {
   }
   lines.sort((x, y) => x.id.localeCompare(y.id, undefined, { numeric: true }));
 
+  // Replace (or remove) the row with `id` in the current `after` list,
+  // preserving relative order of other entries.
+  const applyForId = (id: string, nextValue: string | null) => {
+    const updated: string[] = [];
+    let replaced = false;
+    for (const v of after) {
+      if (identify(v) === id) {
+        if (nextValue !== null) updated.push(nextValue);
+        replaced = true;
+      } else {
+        updated.push(v);
+      }
+    }
+    if (!replaced && nextValue !== null) updated.push(nextValue);
+    cfg.setAll(key, updated);
+  };
+
   return (
     <div className="flex flex-col gap-[1px]">
-      {lines.map((ln, i) => {
-        if (ln.kind === "+") {
-          return (
-            <span key={i} style={{ color: "var(--success)" }}>
-              + {key} = {ln.after}
-            </span>
-          );
-        }
-        if (ln.kind === "-") {
-          return (
-            <span
-              key={i}
-              style={{
-                color: "var(--muted)",
-                textDecoration: "line-through",
-              }}
-            >
-              − {key} = {ln.before}
-            </span>
-          );
-        }
-        return (
-          <div key={i} className="flex flex-col gap-[1px]">
-            <span style={{ color: "var(--success)" }}>
-              + {key} = {ln.after}
-            </span>
-            <span
-              style={{
-                color: "var(--muted)",
-                textDecoration: "line-through",
-              }}
-            >
-              − {key} = {ln.before}
-            </span>
+      {lines.map((ln) => (
+        <div key={ln.id} className="flex items-start gap-2">
+          <div className="flex-1 flex flex-col gap-[1px] min-w-0">
+            {ln.after !== undefined && (
+              <EditableLine
+                prefix={`+ ${key} = `}
+                value={ln.after}
+                onChange={(nv) => applyForId(ln.id, nv)}
+              />
+            )}
+            {ln.before !== undefined && (
+              <span
+                style={{
+                  color: "var(--muted)",
+                  textDecoration: "line-through",
+                }}
+              >
+                − {key} = {ln.before}
+              </span>
+            )}
           </div>
-        );
-      })}
+          <RevertButton
+            onClick={() => applyForId(ln.id, ln.before ?? null)}
+            title={`Revert ${key} ${ln.id}`}
+          />
+        </div>
+      ))}
     </div>
   );
 }
