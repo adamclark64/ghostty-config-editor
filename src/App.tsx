@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { api } from "@/api/tauri";
 import {
   useConfigPaths,
@@ -78,6 +79,53 @@ export default function App() {
         setToast(`Revert failed: ${String(e)}`);
         setTimeout(() => setToast(null), 5000);
       }
+    }
+  }
+
+  async function handleImport() {
+    if (config.isDirty) {
+      const ok = window.confirm(
+        "You have unsaved edits. Importing will replace them. Continue?"
+      );
+      if (!ok) return;
+    }
+    try {
+      const picked = await openDialog({
+        multiple: false,
+        directory: false,
+        title: "Import Ghostty config",
+      });
+      if (!picked || typeof picked !== "string") return;
+      const entries = await api.readFileEntries(picked);
+      config.replace(entries);
+      validateMut.mutate();
+      setToast(
+        `Imported from ${picked.split("/").pop()} — review and Save & Reload`
+      );
+      setTimeout(() => setToast(null), 5000);
+    } catch (e) {
+      setToast(`Import failed: ${String(e)}`);
+      setTimeout(() => setToast(null), 6000);
+    }
+  }
+
+  async function handleExport() {
+    try {
+      const stamp = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "");
+      const picked = await saveDialog({
+        title: "Export Ghostty config",
+        defaultPath: `ghostty-config-${stamp}.conf`,
+      });
+      if (!picked) return;
+      await api.writeFileEntries(picked, config.draft);
+      setToast(`Exported → ${picked.split("/").pop()}`);
+      setTimeout(() => setToast(null), 4000);
+    } catch (e) {
+      setToast(`Export failed: ${String(e)}`);
+      setTimeout(() => setToast(null), 6000);
     }
   }
 
@@ -177,6 +225,8 @@ export default function App() {
         onKeepSession={handleKeepSession}
         onShowBackups={() => setShowBackups(true)}
         onShowThemes={() => setShowThemes(true)}
+        onImport={handleImport}
+        onExport={handleExport}
         search={search}
         onSearch={setSearch}
       />

@@ -29,6 +29,8 @@ pub fn run() {
             commands::list_fonts,
             commands::list_actions,
             commands::list_backups,
+            commands::read_file_entries,
+            commands::write_file_entries,
             commands::restore_backup,
             commands::reload_ghostty,
             commands::list_theme_previews,
