@@ -56,6 +56,13 @@ export function ThemeGallery({ onClose, onApplyEntries }: Props) {
     onApplyEntries([["theme", [name]], ...clear]);
   }
 
+  function randomPreset() {
+    const pool = [...(themes ?? []), ...(remote ?? [])];
+    if (pool.length === 0) return;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    applyPreset(pick.name);
+  }
+
   function applyAsPalette(t: ThemePreview) {
     const entries: Array<[string, string[]]> = [["theme", []]];
     if (t.background) entries.push(["background", [t.background]]);
@@ -111,6 +118,20 @@ export function ThemeGallery({ onClose, onApplyEntries }: Props) {
             />
           </div>
           <div className="flex-1" />
+          <button
+            type="button"
+            onClick={randomPreset}
+            className="inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-md text-[12px] font-medium"
+            style={{
+              background: "var(--surface-raised)",
+              color: "var(--fg)",
+              border: "1px solid var(--border)",
+            }}
+            title="Apply a random theme from built-in + community"
+          >
+            <Icon name="shuffle" size={13} />
+            Random theme
+          </button>
           <button
             type="button"
             onClick={onClose}

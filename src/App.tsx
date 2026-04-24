@@ -13,6 +13,7 @@ import { BackupList } from "@/components/BackupList";
 import { ThemeGallery } from "@/components/ThemeGallery";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { usePaneLayout } from "@/hooks/usePaneLayout";
+import { generateRandomTheme, randomThemeEntries } from "@/lib/random-theme";
 import type { ConfigEntry, ValidationResult } from "@/types";
 import type { SectionId } from "@/lib/sections";
 
@@ -127,6 +128,13 @@ function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
 
   const revertDisabled = !cfg.isDirty && !sessionQ.data?.is_modified;
 
+  function handleRandomize() {
+    const next = mergeValues(cfg.original, randomThemeEntries(generateRandomTheme()));
+    cfg.replace(next);
+    setValidation(null);
+    showToast("Randomized colors — review the diff before saving.", "info");
+  }
+
   return (
     <div className="h-full flex flex-col" style={{ background: "var(--bg)" }}>
       <Titlebar
@@ -135,6 +143,7 @@ function Shell({ schema }: { schema: import("@/types").ConfigKey[] }) {
         dirty={cfg.isDirty}
         compareOpen={compareOpen}
         onCompare={() => setCompareOpen((v) => !v)}
+        onRandomize={handleRandomize}
         onRevert={handleRevert}
         revertDisabled={revertDisabled}
         onValidate={() => validateMut.mutate()}
