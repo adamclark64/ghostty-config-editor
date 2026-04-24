@@ -54,3 +54,15 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Tag pushes made by GITHUB_TOKEN do not trigger downstream workflows, so
+  # invoke dmg.yml explicitly once changesets publishes a new version.
+  publish-dmg:
+    name: Publish DMG
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    uses: ./.github/workflows/dmg.yml
+    with:
+      tag: v${{ fromJson(needs.release.outputs.publishedPackages)[0].version }}
+    permissions:
+      contents: write

@@ -1,9 +1,11 @@
 name: Publish DMG
 
-# Triggered by the `v*` tag that the changesets release workflow pushes after
-# the "Version Packages" PR merges. Builds the Tauri app on macOS and uploads
-# the resulting .dmg (and .app.tar.gz for updater feeds) to the GitHub
-# Release associated with the tag.
+# Builds the Tauri app on macOS and uploads the resulting .dmg (and
+# .app.tar.gz for updater feeds) to the GitHub Release associated with the
+# tag. Invoked by release.yml via `workflow_call` after the "Version
+# Packages" PR merges — tag-push events from the default GITHUB_TOKEN do not
+# trigger downstream workflows, so we call this one explicitly. The
+# `push: tags` trigger still fires for tags pushed by a human with git.
 on:
   push:
     tags:
@@ -13,6 +15,12 @@ on:
       tag:
         description: "Tag to build and attach artifacts to (e.g. v0.2.0)"
         required: true
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to build and attach artifacts to (e.g. v0.2.0)"
+        required: true
+        type: string
 
 concurrency:
   group: dmg-${{ github.ref }}
@@ -37,7 +45,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ inputs.tag || github.ref }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -79,8 +87,8 @@ jobs:
           # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: ${{ github.event.inputs.tag || github.ref_name }}
-          releaseName: "Ghostty Config Editor ${{ github.event.inputs.tag || github.ref_name }}"
+          tagName: ${{ inputs.tag || github.ref_name }}
+          releaseName: "Ghostty Config Editor ${{ inputs.tag || github.ref_name }}"
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.rust_target }}
