@@ -1,5 +1,15 @@
 # ghostty-config-editor
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4](https://github.com/adamclark64/ghostty-config-editor/pull/4) [`47451a9`](https://github.com/adamclark64/ghostty-config-editor/commit/47451a985995320635c2f15ddb75dbb09aef560c) Thanks [@adamclark64](https://github.com/adamclark64)! - Add Import and Export toolbar actions. Import replaces the current draft with a config file picked from disk (with a confirmation prompt if there are unsaved edits). Export writes the current draft to a user-chosen path with a timestamped default filename.
+
+### Patch Changes
+
+- [#3](https://github.com/adamclark64/ghostty-config-editor/pull/3) [`ed7d8c9`](https://github.com/adamclark64/ghostty-config-editor/commit/ed7d8c99def4c2263b702d5d68f9537f137c7b86) Thanks [@adamclark64](https://github.com/adamclark64)! - Replace the app icon with Ghostty's official blueprint logo. Adds `icons`, `icons:fetch`, and `icons:generate` npm scripts to keep the icon in sync with upstream.
+
 ## 0.2.0
 
 ### Minor Changes
