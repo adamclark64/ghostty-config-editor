@@ -156,6 +156,24 @@ pub fn list_backups() -> Result<Vec<BackupInfo>, AppError> {
     config_io::list_backups()
 }
 
+/// Read an arbitrary file from disk and parse it as a Ghostty config.
+/// Used by the Import feature after the user picks a file via the dialog.
+#[tauri::command]
+pub fn read_file_entries(path: PathBuf) -> Result<Vec<ConfigEntry>, AppError> {
+    let text = std::fs::read_to_string(&path)
+        .map_err(|e| AppError::Io(format!("read {}: {e}", path.display())))?;
+    Ok(config_parser::parse(&text))
+}
+
+/// Serialize and write the given entries to an arbitrary path (no backup,
+/// no validation — the user explicitly chose the destination). Used by Export.
+#[tauri::command]
+pub fn write_file_entries(path: PathBuf, entries: Vec<ConfigEntry>) -> Result<(), AppError> {
+    let text = config_parser::serialize(&entries);
+    std::fs::write(&path, text)
+        .map_err(|e| AppError::Io(format!("write {}: {e}", path.display())))
+}
+
 #[tauri::command]
 pub fn restore_backup(path: PathBuf) -> Result<(), AppError> {
     config_io::restore_backup(&path)

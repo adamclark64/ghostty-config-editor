@@ -12,6 +12,8 @@ interface Props {
   onKeepSession: () => void;
   onShowBackups: () => void;
   onShowThemes: () => void;
+  onImport: () => void;
+  onExport: () => void;
   search: string;
   onSearch: (q: string) => void;
 }
@@ -27,6 +29,8 @@ export function Toolbar({
   onKeepSession,
   onShowBackups,
   onShowThemes,
+  onImport,
+  onExport,
   search,
   onSearch,
 }: Props) {
@@ -105,6 +109,22 @@ export function Toolbar({
         className="px-3 py-1 text-sm rounded border border-zinc-700 text-zinc-200 hover:bg-zinc-800"
       >
         Themes
+      </button>
+      <button
+        type="button"
+        onClick={onImport}
+        className="px-3 py-1 text-sm rounded border border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+        title="Replace the current draft with a config file from disk"
+      >
+        Import
+      </button>
+      <button
+        type="button"
+        onClick={onExport}
+        className="px-3 py-1 text-sm rounded border border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+        title="Write the current draft to a file of your choice"
+      >
+        Export
       </button>
       {sessionModified && <ExperimentingPill mtime={session?.baseline_mtime ?? null} />}
       <div className="flex-1" />

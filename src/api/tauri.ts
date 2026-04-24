@@ -22,6 +22,10 @@ export const api = {
   listFonts: () => invoke<string[]>("list_fonts"),
   listActions: () => invoke<string[]>("list_actions"),
   listBackups: () => invoke<BackupInfo[]>("list_backups"),
+  readFileEntries: (path: string) =>
+    invoke<ConfigEntry[]>("read_file_entries", { path }),
+  writeFileEntries: (path: string, entries: ConfigEntry[]) =>
+    invoke<void>("write_file_entries", { path, entries }),
   restoreBackup: (path: string) => invoke<void>("restore_backup", { path }),
   reloadGhostty: () => invoke<void>("reload_ghostty"),
   listThemePreviews: () => invoke<ThemePreview[]>("list_theme_previews"),
