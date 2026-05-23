@@ -1,5 +1,7 @@
 # Ghostty Config Editor
 
+![Ghostty Config Editor](web/public/screenshots/hero.png)
+
 A macOS desktop app for editing, validating, and reloading [Ghostty](https://ghostty.org) configuration through a visual UI driven by Ghostty's own schema.
 
 - Auto-discovers all ~580 config keys by parsing `ghostty +show-config --default --docs`
