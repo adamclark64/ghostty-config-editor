@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0f0f13;
+  --color-bg-2: #14141a;
+  --color-surface: #17171d;
+  --color-surface-raised: #1c1c24;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-fg: #e6e6ea;
+  --color-muted: rgba(230, 230, 234, 0.6);
+  --color-subtle: rgba(230, 230, 234, 0.4);
+  --color-accent: #c6a0f6;
+  --color-accent-strong: #b388ee;
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+@media (prefers-color-scheme: light) {
+  @theme {
+    --color-bg: #faf9f7;
+    --color-bg-2: #f3f1ec;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-border: rgba(0, 0, 0, 0.08);
+    --color-border-strong: rgba(0, 0, 0, 0.16);
+    --color-fg: #201e1a;
+    --color-muted: rgba(32, 30, 26, 0.65);
+    --color-subtle: rgba(32, 30, 26, 0.45);
+  }
+}
+
+:root {
+  color-scheme: dark light;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-fg);
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
