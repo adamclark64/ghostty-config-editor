@@ -3,6 +3,8 @@ import type { LatestRelease } from "@/lib/release";
 import { repoUrl } from "@/lib/release";
 import { screenshotExists } from "@/lib/screenshots";
 import { DownloadButtons } from "./DownloadButtons";
+import { HeroImageButton } from "./HeroImageButton";
+import { HERO_SHOT } from "@/lib/shots";
 
 type Props = {
   release: LatestRelease;
@@ -83,13 +85,11 @@ function HeroShot({ hasHero }: { hasHero: boolean }) {
       />
       {hasHero ? (
         <div className="overflow-hidden rounded-2xl border border-border-strong shadow-2xl">
-          <Image
-            src={HERO_SRC}
-            alt="Ghostty Config Editor — Colors and Theme section with live preview"
-            width={2000}
-            height={1252}
-            priority
-            className="h-auto w-full"
+          <HeroImageButton
+            src={HERO_SHOT.src}
+            alt={HERO_SHOT.alt}
+            width={HERO_SHOT.width}
+            height={HERO_SHOT.height}
           />
         </div>
       ) : (
